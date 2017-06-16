@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import ReactDOMServer from 'react-dom/server'
+import { omit } from 'lodash'
 
 // See: https://github.com/webpack/react-starter/issues/37
 const isBrowser = typeof window !== 'undefined'
@@ -10,6 +11,7 @@ export default class ReactSVG extends Component {
 
   static defaultProps = {
     callback: () => {},
+    component: 'span',
     className: '',
     evalScripts: 'once',
     style: {}
@@ -17,6 +19,7 @@ export default class ReactSVG extends Component {
 
   static propTypes = {
     callback: PropTypes.func,
+    component: PropTypes.string,
     className: PropTypes.string,
     evalScripts: PropTypes.oneOf([ 'always', 'once', 'never' ]),
     path: PropTypes.string.isRequired,
@@ -28,7 +31,6 @@ export default class ReactSVG extends Component {
       this.removeSVG()
       return
     }
-
     this.container = container
     this.renderSVG()
   }
@@ -36,26 +38,19 @@ export default class ReactSVG extends Component {
   renderSVG(props = this.props) {
     const {
       callback: each,
-      className,
       evalScripts,
-      path,
-      style
+      path
     } = props
 
     const div = document.createElement('div')
+
     div.innerHTML = ReactDOMServer.renderToStaticMarkup(
-      <div>
-        <div
-          className={className}
-          data-src={path}
-          style={style}
-        />
-      </div>
+      <div data-src={path} />
     )
 
     const wrapper = this.container.appendChild(div.firstChild)
 
-    SVGInjector(wrapper.firstChild, {
+    SVGInjector(wrapper, {
       evalScripts,
       each
     })
@@ -70,12 +65,19 @@ export default class ReactSVG extends Component {
     this.renderSVG(nextProps)
   }
 
-  shouldComponentUpdate() {
-    return false
+  shouldComponentUpdate(nextProps) {
+    return this.props !== nextProps
   }
 
   render() {
-    return <div ref={this.refCallback} />
+    const Component = this.props.component
+    const restProps = omit(this.props, Object.keys(ReactSVG.propTypes))
+    return (
+      <Component ref={this.refCallback}
+        className={this.props.className}
+        style={this.props.style}
+        {...restProps} />
+    )
   }
 
 }
