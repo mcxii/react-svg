@@ -48,7 +48,9 @@ export default class ReactSVG extends Component {
       <div data-src={path} />
     )
 
-    const wrapper = this.container.appendChild(div.firstChild)
+    const wrapper = this.container.insertBefore(
+      div.firstChild, this.container.firstChild
+    )
 
     SVGInjector(wrapper, {
       evalScripts,
@@ -60,24 +62,19 @@ export default class ReactSVG extends Component {
     this.container.removeChild(this.container.firstChild)
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.removeSVG()
-    this.renderSVG(nextProps)
-  }
-
   shouldComponentUpdate(nextProps) {
-    return this.props !== nextProps
+    return this.props && this.props !== nextProps
   }
 
   render() {
     const Component = this.props.component
+    const { style, className } = this.props
     const restProps = omit(this.props, Object.keys(ReactSVG.propTypes))
     return (
       <Component ref={this.refCallback}
-        className={this.props.className}
-        style={this.props.style}
+        className={className ? className : null}
+        style={style ? style : null}
         {...restProps} />
     )
   }
-
 }
